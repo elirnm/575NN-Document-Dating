@@ -1,0 +1,24 @@
+Decision Tree
+Train time: 2.0810134150087833 seconds
+Devtest accuracy: 0.638888888889
+Test accuracy: 0.439024390244
+----------
+
+SVM
+Train time: 2.101506730541587 seconds
+Devtest accuracy: 0.527777777778
+Test accuracy: 0.170731707317
+----------
+
+MaxEnt
+Train time: 2.3092415183782578 seconds
+Devtest accuracy: 0.638888888889
+Test accuracy: 0.475609756098
+----------
+
+Multinomial Naive Bayes
+Train time: 2.074215117841959 seconds
+Devtest accuracy: 0.333333333333
+Test accuracy: 0.439024390244
+----------
+
