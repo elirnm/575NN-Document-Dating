@@ -2,59 +2,53 @@ import pickle
 from keras.preprocessing import sequence
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
+from keras.layers import LSTM
 from keras.layers import Embedding
 from keras.layers import Conv1D, MaxPooling1D, GlobalMaxPooling1D
 from keras.utils.np_utils import to_categorical
 from keras.preprocessing.text import Tokenizer
-from data import ALPHABET, CASE_I_ALPHABET, DATA_DIR
+from data import *
 
 def get_label(doc):
     lab = doc.corpus_section[:2]
     if lab[1] == "X" and len(doc.corpus_section) == 4:
         lab = lab[0] + doc.corpus_section[3]
     return lab.strip()
-    
+
 with open(DATA_DIR + "test_docs.pkl", 'rb') as f:
     test_docs = pickle.load(f)
 with open(DATA_DIR + "devtest_docs.pkl", 'rb') as f:
     devtest_docs = pickle.load(f)
 with open(DATA_DIR + "train_docs.pkl", 'rb') as f:
     train_docs = pickle.load(f)
-    
-# set parameters:
-batch_size = 32
-kernel_size = 7
-epochs = 10
-maxchars = 256
 
-# map chars to indices
-char_indices = {}
-for c in CASE_I_ALPHABET:
-    char_indices[c] = len(char_indices)
-    
-# convert characters to integer indices 
-x_train = []
-y_train = []
-for doc in train_docs:
-    x_train.append([char_indices[x.lower()] for i, x in enumerate(doc.chars) if i < maxchars])
-    y_train.append(get_label(doc))
-    
-x_devtest = []
-y_devtest = []
-for doc in devtest_docs:
-    x_devtest.append([char_indices[x.lower()] for i, x in enumerate(doc.chars) if i < maxchars])
-    y_devtest.append(get_label(doc))
-    
-x_test = []
-y_test = []
-for doc in test_docs:
-    x_test.append([char_indices[x.lower()] for i, x in enumerate(doc.chars) if i < maxchars])
-    y_test.append(get_label(doc))
-    
+# set parameters:
+max_features = 5000
+maxlen = 400
+batch_size = 32
+embedding_dims = 50
+filters = 250
+kernel_size = 3
+hidden_dims = 250
+epochs = 10
+max_words = 10000
+tok = Tokenizer()
+
+# convert text to binary matrices
+tok.fit_on_texts([x.cleaned_text for x in train_docs])
+x_train = tok.texts_to_matrix([x.cleaned_text for x in train_docs])
+y_train = [get_label(x) for x in train_docs]
+
+x_devtest = tok.texts_to_matrix([x.cleaned_text for x in devtest_docs])
+y_devtest = [get_label(x) for x in devtest_docs]
+
+x_test = tok.texts_to_matrix([x.cleaned_text for x in test_docs])
+y_test = [get_label(x) for x in test_docs]
+
 # pad the matrices just in case
-x_train = sequence.pad_sequences(x_train, maxlen=maxchars)
-x_devtest = sequence.pad_sequences(x_devtest, maxlen=maxchars)
-x_test = sequence.pad_sequences(x_test, maxlen=maxchars)
+x_train = sequence.pad_sequences(x_train, maxlen=max_words)
+x_devtest = sequence.pad_sequences(x_devtest, maxlen=max_words)
+x_test = sequence.pad_sequences(x_test, maxlen=max_words)
 
 # convert labels to integers
 label_vals = {}
@@ -72,30 +66,22 @@ y_train = to_categorical(y_train, num_classes)
 y_devtest = to_categorical(y_devtest, num_classes)
 y_test = to_categorical(y_test, num_classes)
 
-
 # build the model
 model = Sequential()
-model.add(Embedding(len(CASE_I_ALPHABET), 150))
-# model.add(Conv1D(250, 3, input_shape=(maxchars, len(ALPHABET),)))
-
-model.add(Conv1D(250, kernel_size))
-model.add(Activation('relu'))
-model.add(MaxPooling1D(pool_size=3))
-
-model.add(Conv1D(250, 3))
-model.add(Activation('relu'))
-model.add(GlobalMaxPooling1D())
-
-model.add(Dense(1024))
+model.add(Dense(512, input_shape=(max_words,)))
+# model.add(Dense(512))
 model.add(Activation('relu'))
 model.add(Dropout(0.2))
+# model.add(Dense(512))
+# model.add(Activation('relu'))
+# model.add(Dropout(0.2))
 model.add(Dense(num_classes))
 model.add(Activation('softmax'))
 
 model.compile(loss='categorical_crossentropy',
               optimizer='adam',
               metrics=['accuracy'])
-              
+
 result = model.fit(x_train, y_train,
                    batch_size=batch_size,
                    epochs=epochs,
@@ -108,5 +94,5 @@ print('DevTest accuracy:', score[1])
 
 score = model.evaluate(x_test, y_test,
                        batch_size=batch_size)
-print('Test loss:' + str(score[0]) + "\n")
-print('Test accuracy:' + str(score[1]) + "\n")
+print('\nTest loss:', score[0])
+print('Test accuracy:', score[1])

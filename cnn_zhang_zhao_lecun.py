@@ -141,6 +141,5 @@ print('DevTest accuracy:', score[1])
 
 score = model.evaluate(x_test, y_test,
                        batch_size=batch_size)
-fi = open("res", 'w')
-fi.write('Test loss:' + str(score[0]) + "\n")
-fi.write('Test accuracy:' + str(score[1]) + "\n")
+print('Test loss:' + str(score[0]) + "\n")
+print('Test accuracy:' + str(score[1]) + "\n")
