@@ -147,6 +147,7 @@ for file in os.listdir(CORPUS_DIR):
     else:
         test_docs.append(doc)
 
+os.makedirs("cached_data", exist_ok=True)
 with open("cached_data/train_docs.pkl", 'wb') as f:
     pickle.dump(train_docs, f)
 with open("cached_data/devtest_docs.pkl", 'wb') as f:
