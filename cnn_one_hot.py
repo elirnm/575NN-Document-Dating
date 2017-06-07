@@ -23,7 +23,7 @@ with open(DATA_DIR + "train_docs.pkl", 'rb') as f:
     
 # set parameters:
 batch_size = 32
-kernel_size = 7
+kernel_size = 10
 epochs = 10
 maxchars = 256
 
